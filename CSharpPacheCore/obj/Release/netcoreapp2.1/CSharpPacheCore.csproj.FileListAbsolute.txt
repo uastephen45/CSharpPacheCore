@@ -1,0 +1,9 @@
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\bin\Release\netcoreapp2.1\CSharpPacheCore.deps.json
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\bin\Release\netcoreapp2.1\CSharpPacheCore.dll
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\bin\Release\netcoreapp2.1\CSharpPacheCore.pdb
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\obj\Release\netcoreapp2.1\CSharpPacheCore.csprojAssemblyReference.cache
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\obj\Release\netcoreapp2.1\CSharpPacheCore.csproj.CoreCompileInputs.cache
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\obj\Release\netcoreapp2.1\CSharpPacheCore.AssemblyInfoInputs.cache
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\obj\Release\netcoreapp2.1\CSharpPacheCore.AssemblyInfo.cs
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\obj\Release\netcoreapp2.1\CSharpPacheCore.dll
+C:\Users\Stephen\source\repos\CSharpPacheCore\CSharpPacheCore\obj\Release\netcoreapp2.1\CSharpPacheCore.pdb

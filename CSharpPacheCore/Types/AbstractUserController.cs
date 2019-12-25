@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace CSharpPacheCore.Types
+{
+    public abstract class AbstractUserController
+    {
+        public abstract UserControllerConfig Config();
+        protected abstract HttpResponse Response(HttpRequest req);
+        public HttpResponse HttpResponse(HttpRequest req)
+        {
+            var ret = Response(req);
+            if (ret.ByteArrayResponseBody == null)
+            {
+                ret.ByteArrayResponseBody = Encoding.ASCII.GetBytes(ret.ResponseBody);
+            }
+            return ret;
+        }
+    }
+}
