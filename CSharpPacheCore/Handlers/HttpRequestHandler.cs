@@ -31,9 +31,8 @@ namespace CSharpPacheCore.Handlers
                     Console.WriteLine(ex.Message);
 
                 }
-
-
             }
+
             void Init()
             {
                 Byte[] bytes = new Byte[256];
@@ -59,8 +58,6 @@ namespace CSharpPacheCore.Handlers
                     default:
                         break;
                 }
-
-
                 this.HttpRequest.Url = rawRequest.Split(whitespace)[1];
                 Console.WriteLine(string.Concat("URL: ", this.HttpRequest.Url));
                 this.HttpRequest.QueryParameters = getQueryParameters();
@@ -83,6 +80,12 @@ namespace CSharpPacheCore.Handlers
 
             }
 
+            public HttpResponse DisgestPostMethod()
+            {
+                HttpResponse ret = HttpUserCodeHandler.GetResponse(HttpRequest);
+                return ret;
+            }
+        
             public HttpResponse DigestGetMethod()
             {
                 try
@@ -93,6 +96,7 @@ namespace CSharpPacheCore.Handlers
                         HttpResponse ret = HttpUserCodeHandler.GetResponse(HttpRequest);
                         return ret;
                     }
+
                     var dir = AppDomain.CurrentDomain.BaseDirectory;
                     byte[] fileBytes;
                     String text = "";
@@ -157,7 +161,7 @@ namespace CSharpPacheCore.Handlers
 
                 if (this.HttpRequest.WebMethod == HttpMethod.POST)
                 {
-
+                return DisgestPostMethod();
                 }
 
                 return new HttpResponse() { SC = StatusCode.NotFound };

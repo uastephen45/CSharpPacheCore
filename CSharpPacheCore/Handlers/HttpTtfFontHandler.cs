@@ -20,10 +20,5 @@ namespace CSharpPacheCore.Handlers
         {
             return File.ReadAllBytes(this.Dir);
         }
-
-
-
-
-
     }
 }

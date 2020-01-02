@@ -10,6 +10,7 @@ namespace CSharpPacheCore.Handlers
     static class HttpUserCodeHandler
     {
         static Dictionary<string, AbstractUserController> UserControllers = new Dictionary<string, AbstractUserController>();
+        static IEnumerable<AbstractMiddleware> middlewares;
         public static void setControllers<T>()
         {
             setDependyObjects<T>();
@@ -18,56 +19,67 @@ namespace CSharpPacheCore.Handlers
                 .Where(t => t.IsSubclassOf(typeof(AbstractUserController)) && !t.IsAbstract)
                 .Select(t => (AbstractUserController)Activator.CreateInstance(t));
 
+            middlewares = typeof(T)
+                    .Assembly.GetTypes()
+                    .Where(t => t.IsSubclassOf(typeof(AbstractMiddleware)) && !t.IsAbstract)
+                    .Select(t => (AbstractMiddleware)Activator.CreateInstance(t));
+
             foreach (AbstractUserController abstractUserController in controllers)
             {
-                UserControllers.Add(abstractUserController.Config().Url, abstractUserController);
+                UserControllers.Add(abstractUserController.Config().HttpMethod + " "+ abstractUserController.Config().Url, abstractUserController);
             }
         }
 
         static Dictionary<string, Type> depencyObjects = new Dictionary<string, Type>();
         static void setDependyObjects<T>()
-        {
-            
-                foreach (Type type in typeof(T).Assembly.GetTypes())
+        {            
+            foreach (Type type in typeof(T).Assembly.GetTypes())
+            {
+                if (type.GetCustomAttributes(typeof(AutoConfigureComponentAttribute), true).Length > 0)
                 {
-                    if (type.GetCustomAttributes(typeof(AutoConfigureComponentAttribute), true).Length > 0)
-                    {
-                        depencyObjects.Add(type.GetInterfaces()[0].Name, type);
-                    }
+                    depencyObjects.Add(type.GetInterfaces()[0].Name, type);
                 }
             }
+        }
 
-
-
-
-
-
-        
         public static HttpResponse GetResponse(HttpRequest req)
         {
-            var Controller = UserControllers[req.Url.Split('?')[0]];
-            Controller = (AbstractUserController)Activator.CreateInstance(Controller.GetType());
-            FieldInfo[] fields = Controller.GetType().GetFields();
-            foreach (FieldInfo field in fields)
+            var Controller = (AbstractUserController)Activator.CreateInstance(UserControllers[req.WebMethod + " " + req.Url.Split('?')[0]].GetType());
+
+            foreach (FieldInfo field in Controller.GetType().GetFields())
             {
-                // if true then it has a autoconfigure item. 
+                // if true then it has an autoconfigure item. 
                 if (field.GetCustomAttributes(typeof(AutoConfigureAttribute), true).Length > 0)
                 {
-                    Console.WriteLine(field.FieldType.Name);
-                    Type diType = depencyObjects[field.FieldType.Name];
-                    Console.WriteLine(diType.Name);
-                    var di = Activator.CreateInstance(diType);
-                    field.SetValue(Controller, di);
+                    field.SetValue(Controller, Activator.CreateInstance(depencyObjects[field.FieldType.Name]));
                 }
-              
             }
 
+            Controller.abstractMiddlewares = new List<AbstractMiddleware>();
+            foreach(AbstractMiddleware abstractMiddleware in middlewares)
+            {
+                if (abstractMiddleware.RouteAcceptance(req))
+                {
+                    Controller.abstractMiddlewares.Add(abstractMiddleware);
+                }
+            }
 
+            foreach (var mw in Controller.abstractMiddlewares)
+            {
+                req = mw.HttpRequest(req);
+            }
 
-                    var ret = Controller.HttpResponse(req);
+            var ret = Controller.HttpResponse(req);
+
+            foreach(var mw in Controller.abstractMiddlewares)
+            {
+                ret = mw.HttpResponse(ret);
+            }
+
             return ret;
         }
 
+        
 
 
     }

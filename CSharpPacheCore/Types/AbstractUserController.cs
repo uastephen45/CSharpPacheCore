@@ -7,6 +7,7 @@ namespace CSharpPacheCore.Types
     public abstract class AbstractUserController
     {
         public abstract UserControllerConfig Config();
+        public List<AbstractMiddleware> abstractMiddlewares = new List<AbstractMiddleware>();
         protected abstract HttpResponse Response(HttpRequest req);
         public HttpResponse HttpResponse(HttpRequest req)
         {
