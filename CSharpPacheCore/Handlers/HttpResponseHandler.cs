@@ -31,7 +31,26 @@ namespace CSharpPacheCore.Handlers
             {
                 Ok();
             }
+            if(this.Response.SC == StatusCode.SwitchingProtocols)
+            {
+                SwitchingProtocols();
+            }
 
+
+        }
+        void SwitchingProtocols()
+        {
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes("HTTP/1.1 101 SwitchingProtocols"));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes("Upgrade: websocket"));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes("Connection: Upgrade"));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes("Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo="));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes("Sec - WebSocket - Protocol: chat"));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.cpacheSteam.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
 
         }
         void OkWithFont()

@@ -8,6 +8,7 @@ namespace CSharpPacheCore.Types
     {
         Ok = 200,
         NotFound = 404,
-        ServerError = 500
+        ServerError = 500,
+        SwitchingProtocols = 101
     }
 }

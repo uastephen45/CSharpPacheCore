@@ -62,6 +62,11 @@ namespace CSharpPacheCore.Handlers
                 Console.WriteLine(string.Concat("URL: ", this.HttpRequest.Url));
                 this.HttpRequest.QueryParameters = getQueryParameters();
                 this.HttpRequest.RequestBody = "";
+                this.HttpRequest.RequestHeaders = new Dictionary<string, string>();
+            foreach(String s in rawRequest.Split(Environment.NewLine)){
+                Console.WriteLine(s);
+                this.HttpRequest.RequestHeaders.Add(s, s);
+            }
 
             }
             public void Handle()

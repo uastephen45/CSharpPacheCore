@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CSharpPacheCore.Types
 {
-    public abstract class AbstractUserController
+    public abstract class AbstractWebSocket
     {
         public abstract UserControllerConfig Config();
         public List<AbstractMiddleware> abstractMiddlewares = new List<AbstractMiddleware>();
@@ -14,10 +14,6 @@ namespace CSharpPacheCore.Types
             var ret = Response(req);
             if (ret.ByteArrayResponseBody == null)
             {
-                if(ret.ResponseBody == null)
-                {
-                    return ret;
-                }
                 ret.ByteArrayResponseBody = Encoding.ASCII.GetBytes(ret.ResponseBody);
             }
             return ret;

@@ -10,6 +10,7 @@ namespace CSharpPacheCore.Types
             public HttpMethod WebMethod;
             public String RequestBody;
             public Dictionary<string, string> QueryParameters;
+            public Dictionary<string, string> RequestHeaders;
         }
 }
 
