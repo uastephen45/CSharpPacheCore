@@ -1,4 +1,5 @@
-﻿using CSharpPacheCore.Types;
+﻿using CSharpPacheCore.Streamers;
+using CSharpPacheCore.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,11 +36,11 @@ namespace CSharpPacheCore.Handlers
 
             void Init()
             {
-                Byte[] bytes = new Byte[256];
+                Byte[] bytes = new Byte[512];
                 HttpRequest = new HttpRequest();
                 int i;
                 i = stream.Read(bytes, 0, bytes.Length);
-                this.rawRequest = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                this.rawRequest = System.Text.Encoding.UTF8.GetString(bytes, 0, i);
                 if (this.rawRequest == "")
                 {
                     client.Close();
@@ -64,8 +65,15 @@ namespace CSharpPacheCore.Handlers
                 this.HttpRequest.RequestBody = "";
                 this.HttpRequest.RequestHeaders = new Dictionary<string, string>();
             foreach(String s in rawRequest.Split(Environment.NewLine)){
-                Console.WriteLine(s);
-                this.HttpRequest.RequestHeaders.Add(s, s);
+                if (s.Contains(":"))
+                {
+                    int pos = s.IndexOf(":");
+                    string headername = s.Substring(0, pos).Trim();
+                    string headervalue = s.Substring(pos + 1, s.Length - pos - 1).Trim();
+                    Console.WriteLine("Header: " + headername + " headervalue: " + headervalue);
+                    this.HttpRequest.RequestHeaders.Add(headername, headervalue);
+                }
+                
             }
 
             }
@@ -87,7 +95,7 @@ namespace CSharpPacheCore.Handlers
 
             public HttpResponse DisgestPostMethod()
             {
-                HttpResponse ret = HttpUserCodeHandler.GetResponse(HttpRequest);
+                HttpResponse ret = HttpUserCodeHandler.GetResponse(HttpRequest,new CPacheStream(stream)) ;
                 return ret;
             }
         
@@ -98,7 +106,7 @@ namespace CSharpPacheCore.Handlers
                     string contentType = GetContentType(HttpRequest.Url);
                     if (contentType == "usercode")
                     {
-                        HttpResponse ret = HttpUserCodeHandler.GetResponse(HttpRequest);
+                        HttpResponse ret = HttpUserCodeHandler.GetResponse(HttpRequest,new CPacheStream(stream));
                         return ret;
                     }
 

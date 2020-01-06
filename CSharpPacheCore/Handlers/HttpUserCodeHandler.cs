@@ -4,25 +4,40 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Reflection;
+using CSharpPacheCore.Streamers;
 
 namespace CSharpPacheCore.Handlers
 {
     static class HttpUserCodeHandler
     {
         static Dictionary<string, AbstractUserController> UserControllers = new Dictionary<string, AbstractUserController>();
+        static Dictionary<string, AbstractWebSocket> WebSockets = new Dictionary<string, AbstractWebSocket>();
         static IEnumerable<AbstractMiddleware> middlewares;
         public static void setControllers<T>()
         {
+            //Injection Object 
             setDependyObjects<T>();
+            //Controllers
             IEnumerable<AbstractUserController> controllers = typeof(T)
                 .Assembly.GetTypes()
                 .Where(t => t.IsSubclassOf(typeof(AbstractUserController)) && !t.IsAbstract)
                 .Select(t => (AbstractUserController)Activator.CreateInstance(t));
-
+            //Middlewares
             middlewares = typeof(T)
                     .Assembly.GetTypes()
                     .Where(t => t.IsSubclassOf(typeof(AbstractMiddleware)) && !t.IsAbstract)
                     .Select(t => (AbstractMiddleware)Activator.CreateInstance(t));
+            //WebSockets
+            IEnumerable<AbstractWebSocket> SocketList = typeof(T)
+                .Assembly.GetTypes()
+                .Where(t => t.IsSubclassOf(typeof(AbstractWebSocket)) && !t.IsAbstract)
+                .Select(t => (AbstractWebSocket)Activator.CreateInstance(t));
+
+
+            foreach (AbstractWebSocket abstractSocket in SocketList)
+            {
+                WebSockets.Add(abstractSocket.Config().Url, abstractSocket);
+            }
 
             foreach (AbstractUserController abstractUserController in controllers)
             {
@@ -41,9 +56,29 @@ namespace CSharpPacheCore.Handlers
                 }
             }
         }
+        public static HttpResponse HandleWebSocket(HttpRequest req, CPacheStream cpacheStream){
+            //check for websocketroutes 
+          
+                var WebSocket = (AbstractWebSocket)Activator.CreateInstance(WebSockets[req.Url.Split('?')[0]].GetType());
 
-        public static HttpResponse GetResponse(HttpRequest req)
+                foreach (FieldInfo field in WebSocket.GetType().GetFields())
+                {
+                    // if true then it has an autoconfigure item. 
+                    if (field.GetCustomAttributes(typeof(AutoConfigureAttribute), true).Length > 0)
+                    {
+                        field.SetValue(WebSocket, Activator.CreateInstance(depencyObjects[field.FieldType.Name]));
+                    }
+                }
+            WebSocket.StartWebSocket(req,cpacheStream);
+
+            return null;
+        }
+        public static HttpResponse GetResponse(HttpRequest req, CPacheStream cpacheStream)
         {
+            if (req.WebMethod == HttpMethod.GET && WebSockets.ContainsKey(req.Url))
+            {
+                    var rets = HandleWebSocket(req, cpacheStream);
+            }
             var Controller = (AbstractUserController)Activator.CreateInstance(UserControllers[req.WebMethod + " " + req.Url.Split('?')[0]].GetType());
 
             foreach (FieldInfo field in Controller.GetType().GetFields())

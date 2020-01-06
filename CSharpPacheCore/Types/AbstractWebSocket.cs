@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSharpPacheCore.Streamers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,17 +7,62 @@ namespace CSharpPacheCore.Types
 {
     public abstract class AbstractWebSocket
     {
-        public abstract UserControllerConfig Config();
+        public abstract WebSocketConfig Config();
         public List<AbstractMiddleware> abstractMiddlewares = new List<AbstractMiddleware>();
-        protected abstract HttpResponse Response(HttpRequest req);
-        public HttpResponse HttpResponse(HttpRequest req)
+        CPacheStream CPacheStream;
+        HttpRequest request;
+        private bool connected;
+        protected abstract void MessageReceived(String Message);
+        protected abstract void ClientStream(HttpRequest request,CPacheStream cPacheStream);
+        private void startListening()
         {
-            var ret = Response(req);
-            if (ret.ByteArrayResponseBody == null)
-            {
-                ret.ByteArrayResponseBody = Encoding.ASCII.GetBytes(ret.ResponseBody);
+            connected = true;
+            while (connected) {
+                string message = CPacheStream.webSocketReadData();
+                if (!String.IsNullOrEmpty(message))
+                {
+                    MessageReceived(message);
+                    //CPacheStream.brodcast(message);
+                }           
             }
-            return ret;
+        }
+
+
+        public HttpResponse StartWebSocket(HttpRequest req,CPacheStream cpacheStream)
+        {
+            this.request = req;
+            this.CPacheStream = cpacheStream;
+            //accept and handle the handshake
+            acceptUpgrade();
+            try
+            {
+                ClientStream(this.request,cpacheStream);//
+                startListening();
+            }
+            catch (Exception)
+            { 
+            }
+            //handle any clean up
+            return new HttpResponse(); 
+        }
+        private void acceptUpgrade()
+        {
+           var key = this.request.RequestHeaders["Sec-WebSocket-Key"]; 
+           key = key +"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+            key = Convert.ToBase64String(
+            System.Security.Cryptography.SHA1.Create().ComputeHash(
+                Encoding.UTF8.GetBytes(key)));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes("HTTP/1.1 101 SwitchingProtocols"));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes("Upgrade: websocket"));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes("Connection: Upgrade"));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes("Sec-WebSocket-Accept: " + key));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes("Sec - WebSocket - Protocol: chat"));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
+            this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
         }
     }
 }
