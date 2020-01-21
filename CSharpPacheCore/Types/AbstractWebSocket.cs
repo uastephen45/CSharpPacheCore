@@ -14,6 +14,7 @@ namespace CSharpPacheCore.Types
         private bool connected;
         protected abstract void MessageReceived(String Message);
         protected abstract void ClientStream(HttpRequest request,CPacheStream cPacheStream);
+        protected abstract void DisposedClientStream(CPacheStream cPacheStream);
         private void startListening()
         {
             connected = true;
@@ -39,14 +40,17 @@ namespace CSharpPacheCore.Types
                 ClientStream(this.request,cpacheStream);//
                 startListening();
             }
-            catch (Exception)
-            { 
+            catch (Exception ex)
+            {
+                DisposedClientStream(this.CPacheStream);
+                Console.WriteLine(ex);
+                //RemoveClientStream();
             }
             //handle any clean up
             return new HttpResponse(); 
         }
         private void acceptUpgrade()
-        {
+        { 
            var key = this.request.RequestHeaders["Sec-WebSocket-Key"]; 
            key = key +"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
             key = Convert.ToBase64String(
@@ -59,8 +63,6 @@ namespace CSharpPacheCore.Types
             this.CPacheStream.Write(Encoding.UTF8.GetBytes("Connection: Upgrade"));
             this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
             this.CPacheStream.Write(Encoding.UTF8.GetBytes("Sec-WebSocket-Accept: " + key));
-            this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
-            this.CPacheStream.Write(Encoding.UTF8.GetBytes("Sec - WebSocket - Protocol: chat"));
             this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
             this.CPacheStream.Write(Encoding.UTF8.GetBytes(Environment.NewLine));
         }

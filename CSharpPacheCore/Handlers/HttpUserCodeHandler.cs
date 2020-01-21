@@ -70,14 +70,16 @@ namespace CSharpPacheCore.Handlers
                     }
                 }
             WebSocket.StartWebSocket(req,cpacheStream);
-
+          
             return null;
         }
         public static HttpResponse GetResponse(HttpRequest req, CPacheStream cpacheStream)
         {
-            if (req.WebMethod == HttpMethod.GET && WebSockets.ContainsKey(req.Url))
+
+            if (req.WebMethod == HttpMethod.GET && WebSockets.ContainsKey(req.Url.Split("?")[0]))
             {
                     var rets = HandleWebSocket(req, cpacheStream);
+                return rets;
             }
             var Controller = (AbstractUserController)Activator.CreateInstance(UserControllers[req.WebMethod + " " + req.Url.Split('?')[0]].GetType());
 

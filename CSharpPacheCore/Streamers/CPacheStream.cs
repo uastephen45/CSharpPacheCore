@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Sockets;
 using System.Text;
 
@@ -10,39 +11,62 @@ namespace CSharpPacheCore.Streamers
     {
         readonly NetworkStream ByteStream;
         readonly StreamWriter streamWriter;
+        public string StreamId = Guid.NewGuid().ToString();
          
         public CPacheStream(NetworkStream stream)
         {
             this.ByteStream = stream;
             this.streamWriter = new StreamWriter(stream);
         }
+        public void Broadcast(Byte[] mess)
+        {
 
-        public void brodcast(String mess)
+            byte[] rawData = Zip(mess);
+            SendBroadcast(rawData);
+        }
+
+        public async void Broadcast(String mess)
         {
             byte[] rawData = Encoding.UTF8.GetBytes(mess);
+            //this.SendBroadcast(rawData);
+            SendBroadcast(rawData);
+        }
+         void SendBroadcast(Byte[] rawData) { 
             int frameCount = 0;
             byte[] frame = new byte[10];
             frame[0] = (byte)129;
             if (rawData.Length <= 125) {
                 frame[1] = (byte)rawData.Length;
                 frameCount = 2;
+                getLongFromByteArray(new byte[1] { frame[1] });
             } else if (rawData.Length >= 126 && rawData.Length <= 65535) {
                 frame[1] = (byte)126;
                 int len = rawData.Length;
                 frame[2] = (byte)((len >> 8) & (byte)255);
                 frame[3] = (byte)(len & (byte)255);
                 frameCount = 4;
+                Byte[] bytearrayy = new byte[2];
+                bytearrayy[0] = frame[2];
+                bytearrayy[1] = frame[3];
+                getLongFromByteArray(bytearrayy);
+
             } else {
-                frame[1] = (byte)127;
+                
+                frame[1] = (byte)(127);
                 int len = rawData.Length;
-                frame[2] = (byte)((len >> 56) & (byte)255);
-                frame[3] = (byte)((len >> 48) & (byte)255);
-                frame[4] = (byte)((len >> 40) & (byte)255);
-                frame[5] = (byte)((len >> 32) & (byte)255);
-                frame[6] = (byte)((len >> 24) & (byte)255);
-                frame[7] = (byte)((len >> 16) & (byte)255);
-                frame[8] = (byte)((len >> 8) & (byte)255);
-                frame[9] = (byte)(len & (byte)255);
+                Byte[] advancebytes = BitConverter.GetBytes((long)rawData.Length);
+                frame[2] = advancebytes[7];
+                frame[3] = advancebytes[6];
+                frame[4] = advancebytes[5];
+                frame[5] = advancebytes[4];
+                frame[6] = advancebytes[3];
+                frame[7] = advancebytes[2];
+                frame[8] = advancebytes[1];
+                frame[9] = advancebytes[0];
+
+                 getLongFromByteArray(advancebytes);
+              
+
                 frameCount = 10;
             }
             int bLength = frameCount + rawData.Length;
@@ -55,20 +79,76 @@ namespace CSharpPacheCore.Streamers
             for (int i = 0; i < rawData.Length; i++) {
                 reply[bLim] = rawData[i];
                 bLim++;
-            } 
-            this.Write(reply);
-            this.Flush();
+            }
+            try
+            {
+                this.Write(reply);
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed To Send Broadcast To: " + this.StreamId);              
+            }
+            
 }
 
+        private long getLongFromByteArray(Byte[] bitArray)
+        {
 
+            long value = 0;
+            for (int i = 0; i < bitArray.Length; i++)
+            {
+                value = (value << 8) + (bitArray[i] & 0xff);
+            }
+
+
+            long value2 = 0;
+            for (int i = 0; i < bitArray.Length; i++)
+            {
+                value2 += ((long)bitArray[i] & 0xffL) << (8 * i);
+            }
+            return value2;
+        }
+
+
+
+        public static void CopyTo(Stream src, Stream dest)
+        {
+            byte[] bytes = new byte[4096];
+
+            int cnt;
+
+            while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0)
+            {
+                dest.Write(bytes, 0, cnt);
+            }
+        }
+        public static byte[] Zip(Byte[] bytes)
+        {
+
+
+            using (var msi = new MemoryStream(bytes))
+            using (var mso = new MemoryStream())
+            {
+                using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                {
+                    //msi.CopyTo(gs);
+                    CopyTo(msi, gs);
+                }
+
+                return mso.ToArray();
+            }
+        }
+
+        public void WriteAsync(Byte[] array)
+        {
+            this.ByteStream.WriteAsync(array, 0, array.Length);
+          
+        }
 
         public void Write(Byte[] array)
         {
-            this.ByteStream.Write(array, 0, array.Length);
-            if (Encoding.UTF8.GetString(array) != Environment.NewLine)
-            {
-                //   Console.WriteLine(Encoding.UTF8.GetString(array));
-            }
+            this.ByteStream.Write(array, 0, array.Length);         
         }
         public String webSocketReadData()
         {

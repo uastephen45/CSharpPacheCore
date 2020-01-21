@@ -87,11 +87,12 @@ namespace CSharpPacheCore.Handlers
                 }
 
                 HttpResponse responseToSend = GetHttpResponse();
-                NetworkStream writer = client.GetStream();
-                HttpResponseHandler responder = new HttpResponseHandler(writer, responseToSend);
-                responder.Respond();
-
-            }
+                if (responseToSend != null) { 
+                    NetworkStream writer = client.GetStream();
+                    HttpResponseHandler responder = new HttpResponseHandler(writer, responseToSend);
+                    responder.Respond();
+                }
+            }   
 
             public HttpResponse DisgestPostMethod()
             {
