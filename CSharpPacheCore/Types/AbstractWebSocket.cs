@@ -19,12 +19,22 @@ namespace CSharpPacheCore.Types
         {
             connected = true;
             while (connected) {
-                string message = CPacheStream.webSocketReadData();
-                if (!String.IsNullOrEmpty(message))
+                try
                 {
-                    MessageReceived(message);
-                    //CPacheStream.brodcast(message);
-                }           
+                    string message = CPacheStream.webSocketReadData();
+                    if (!String.IsNullOrEmpty(message))
+                    {
+                        MessageReceived(message);
+                        //CPacheStream.brodcast(message);
+                    }
+                }
+                catch (Exception)
+                {
+
+                    DisposedClientStream(CPacheStream);
+                    connected = false;
+                }
+                           
             }
         }
 

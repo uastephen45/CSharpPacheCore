@@ -87,7 +87,7 @@ namespace CSharpPacheCore.Streamers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failed To Send Broadcast To: " + this.StreamId);              
+                throw new Exception("Failed To Send Broadcast To: " + this.StreamId,ex);              
             }
             
 }
