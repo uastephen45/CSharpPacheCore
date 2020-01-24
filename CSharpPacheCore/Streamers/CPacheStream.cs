@@ -18,20 +18,20 @@ namespace CSharpPacheCore.Streamers
             this.ByteStream = stream;
             this.streamWriter = new StreamWriter(stream);
         }
-        public void Broadcast(Byte[] mess)
+        public bool Broadcast(Byte[] mess)
         {
 
             byte[] rawData = Zip(mess);
-            SendBroadcast(rawData);
+            return SendBroadcast(rawData);
         }
 
-        public async void Broadcast(String mess)
+        public bool Broadcast(String mess)
         {
             byte[] rawData = Encoding.UTF8.GetBytes(mess);
             //this.SendBroadcast(rawData);
-            SendBroadcast(rawData);
+           return SendBroadcast(rawData);
         }
-         void SendBroadcast(Byte[] rawData) { 
+         bool SendBroadcast(Byte[] rawData) { 
             int frameCount = 0;
             byte[] frame = new byte[10];
             frame[0] = (byte)129;
@@ -83,11 +83,12 @@ namespace CSharpPacheCore.Streamers
             try
             {
                 this.Write(reply);
+                return true;
                 
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed To Send Broadcast To: " + this.StreamId,ex);              
+                throw ex;           
             }
             
 }

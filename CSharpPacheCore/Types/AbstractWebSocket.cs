@@ -28,7 +28,7 @@ namespace CSharpPacheCore.Types
                         //CPacheStream.brodcast(message);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
 
                     DisposedClientStream(CPacheStream);
