@@ -52,8 +52,9 @@ namespace CSharpPacheCore.Types
             }
             catch (Exception ex)
             {
-                DisposedClientStream(this.CPacheStream);
                 Console.WriteLine(ex);
+                DisposedClientStream(this.CPacheStream);
+               
                 //RemoveClientStream();
             }
             //handle any clean up
